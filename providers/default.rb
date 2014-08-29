@@ -1,22 +1,35 @@
 action :create do
-  create_inifile
-  new_resource.updated_by_last_action(true)
-end
-
-action :create_if_missing do
-  if !exists?
+  converge_by("Create or overwrite #{new_resource}") do
     create_inifile
     new_resource.updated_by_last_action(true)
   end
 end
 
+action :create_if_missing do
+  if !exists?
+    converge_by("Create #{new_resource} because it does not exist") do
+      create_inifile
+      new_resource.updated_by_last_action(true)
+    end
+  end
+end
+
 action :update do
   if exists?
-    update_inifile
+    converge_by("Update #{current_resource} because it already exists") do
+      update_inifile
+      new_resource.updated_by_last_action(true)
+    end
   else
-    create_inifile
+    converge_by("Create #{new_resource} because it does not exist") do
+      create_inifile
+      new_resource.updated_by_last_action(true)
+    end
   end
-  new_resource.updated_by_last_action(true)
+end
+
+def why_supported?
+  true
 end
 
 def load_current_resource
